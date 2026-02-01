@@ -1,0 +1,8 @@
+model_path:
+  "prophet-model/serialized_model.json"
+  
+forecasting_periods:
+  12
+  
+frequency:
+  "D"
