@@ -9,7 +9,7 @@ x-airflow-common:
   environment:
     &airflow-common-env
     AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-postgres}/${POSTGRES_DB}
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW__DATABASE__SQL_ALCHEMY_CONN}
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-postgres}/${POSTGRES_DB}
     AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY}
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
@@ -24,6 +24,7 @@ x-airflow-common:
     S3_BUCKET_NAME: ${S3_BUCKET_NAME}
     S3_BUCKET_REGION: ${S3_BUCKET_REGION}
     
+    
 
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
@@ -33,31 +34,31 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/include:/opt/airflow/include
 
   user: "${AIRFLOW_UID:-50000}:0"
-  depends_on:
-    &airflow-common-depends-on
-    postgres:
-      condition: service_healthy
+  # depends_on:
+    # &airflow-common-depends-on
+    # postgres:
+    #   condition: service_healthy
 
 services:
-  postgres:
-    image: postgres:15
-    container_name: airflow-metabase-1
-    env_file:
-      - .env
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    volumes:
-      - airflow-metabase-volume:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
-      interval: 10s
-      retries: 5
-      start_period: 5s
-    restart: unless-stopped
-    ports:
-      - "5432:5432"
+  # postgres:
+  #   image: postgres:15
+  #   container_name: airflow-metabase-1
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #     POSTGRES_DB: ${POSTGRES_DB}
+  #   volumes:
+  #     - airflow-metabase-volume:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
+  #     interval: 10s
+  #     retries: 5
+  #     start_period: 5s
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5432:5432"
 
   airflow-apiserver:
     <<: *airflow-common
@@ -71,10 +72,10 @@ services:
       retries: 5
       start_period: 30s
     restart: always
-    depends_on:
-      <<: *airflow-common-depends-on
-      airflow-init:
-        condition: service_completed_successfully
+    # depends_on:
+    #   <<: *airflow-common-depends-on
+    #   airflow-init:
+    #     condition: service_completed_successfully
 
   airflow-scheduler:
     <<: *airflow-common
@@ -86,10 +87,10 @@ services:
       retries: 5
       start_period: 30s
     restart: always
-    depends_on:
-      <<: *airflow-common-depends-on
-      airflow-init:
-        condition: service_completed_successfully
+    # depends_on:
+    #   <<: *airflow-common-depends-on
+    #   airflow-init:
+    #     condition: service_completed_successfully
 
   airflow-dag-processor:
     <<: *airflow-common
@@ -101,10 +102,10 @@ services:
       retries: 5
       start_period: 30s
     restart: always
-    depends_on:
-      <<: *airflow-common-depends-on
-      airflow-init:
-        condition: service_completed_successfully
+    # depends_on:
+    #   <<: *airflow-common-depends-on
+    #   airflow-init:
+    #     condition: service_completed_successfully
 
   airflow-triggerer:
     <<: *airflow-common
@@ -116,10 +117,10 @@ services:
       retries: 5
       start_period: 30s
     restart: always
-    depends_on:
-      <<: *airflow-common-depends-on
-      airflow-init:
-        condition: service_completed_successfully
+    # depends_on:
+    #   <<: *airflow-common-depends-on
+    #   airflow-init:
+    #     condition: service_completed_successfully
 
   airflow-init:
     <<: *airflow-common
@@ -154,8 +155,8 @@ services:
       - bash
       - -c
       - airflow
-    depends_on:
-      <<: *airflow-common-depends-on
+    # depends_on:
+    #   <<: *airflow-common-depends-on
 
   postgres_dw:
     image: postgres:16

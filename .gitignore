@@ -9,5 +9,16 @@ wheels/
 # Virtual environments
 .venv
 *.log
-log/*
+logs/**
 .env
+*.pem
+.terraform/
+.terraform.lock.hcl
+*.tfstate*
+*.tfstate.backup*
+
+# Terraform variable files that may contain sensitive information
+*.tfvars
+
+# secret files
+secrets/

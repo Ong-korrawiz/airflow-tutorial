@@ -114,6 +114,7 @@ def upload_csv_to_postgres(
     
     # ---- STEP 2: Load CSV into dataframe ----
     df = pd.read_csv(CSV_PATH, parse_dates=["date"])
+    logger.info(f"Loaded CSV with {len(df)} rows and columns: {df.columns.tolist()}")
     
     # ---- STEP 3: Upload to Postgres ----
     df.to_sql(TABLE_NAME, engine, if_exists="append", index=False)

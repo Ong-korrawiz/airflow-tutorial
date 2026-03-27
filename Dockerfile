@@ -44,5 +44,6 @@ RUN python -m pip install prophet
 
 COPY data/ /opt/airflow/data/
 COPY src/ /opt/airflow/src/
+COPY ./global-bundle.pem /opt/airflow/certs/global-bundle.pem
 
     
