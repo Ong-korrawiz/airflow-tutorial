@@ -3,7 +3,7 @@ name: Build and Push to ECR
 on:
   push:
     branches:
-      - main  # Only triggers on pushes to main
+      - master  # Only triggers on pushes to main
 
 jobs:
   deploy:
