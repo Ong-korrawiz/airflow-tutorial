@@ -16,6 +16,9 @@ module "vpc" {
   database_subnet_group_name = "${var.project_name}-db-subnet-group"
   create_database_subnet_group = true
 
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
   enable_nat_gateway = true
   single_nat_gateway = true # Keeps costs down for dev; use false for high-availability
 }

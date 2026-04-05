@@ -25,6 +25,7 @@ resource "aws_security_group" "efs_sg" {
     to_port     = 2049
     protocol    = "tcp"
     cidr_blocks = [module.vpc.vpc_cidr_block]
+    security_groups = [aws_security_group.ecs_service_sg.id]
   }
 }
 
@@ -77,4 +78,14 @@ resource "aws_efs_access_point" "airflow_ap" {
       permissions = "775"
     }
   }
+}
+
+
+resource "aws_vpc_endpoint" "efs" {
+  vpc_id            = module.vpc.vpc_id
+  service_name      = "com.amazonaws.${var.aws_region}.elasticfilesystem"
+  vpc_endpoint_type = "Interface"
+  subnet_ids        = module.vpc.private_subnets
+  security_group_ids = [aws_security_group.ecs_service_sg.id]
+  private_dns_enabled = true
 }

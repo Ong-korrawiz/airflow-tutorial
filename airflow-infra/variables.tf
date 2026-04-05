@@ -33,3 +33,20 @@ variable "repo_name" {
   description = "The name of your GitHub and ECR repository"
   type        = string
 }
+
+variable "airflow_admin_password" {
+  description = "Admin password for Airflow UI"
+  type        = string
+  sensitive   = true
+}
+
+variable "airflow_admin_username" {
+  description = "Admin username for Airflow UI"
+  type        = string
+
+}
+
+variable "airflow_database_sql_alchemy_conn" {
+  description = "SQL Alchemy connection string for Airflow"
+  type        = string
+}

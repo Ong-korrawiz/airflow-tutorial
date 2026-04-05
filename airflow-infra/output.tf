@@ -11,3 +11,8 @@ output "ecs_task_security_group_id" {
 output "db_instance_endpoint" {
   value = aws_db_instance.airflow_db.endpoint
 }
+
+output "airflow_url" {
+  description = "The URL to access the Airflow Web UI"
+  value       = "http://${aws_lb.airflow_alb.dns_name}"
+}

@@ -51,11 +51,7 @@ def generate_fake_events():
     print(f"Generated {len(df)} events")
 
 
-# def transform_data():
-#     df = pd.read_csv('/opt/airflow/tmp/raw_events.csv')
-#     df_sorted = df.sort_values(by="intensity_score", ascending=False)
-#     df_sorted.to_csv('/opt/airflow/tmp/transformed_events.csv', index=False)
-#     print(f"Transformed and sorted {len(df_sorted)} events")
+
 with DAG(
     dag_id="daily_etl_pipeline",
     default_args=default_args,

@@ -2,6 +2,86 @@ resource "aws_ecs_cluster" "main" {
   name = "${var.project_name}-cluster"
 }
 
+
+# --- Load Balancer for UI Access ---
+resource "aws_lb" "airflow_alb" {
+  name               = "${var.project_name}-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb_sg.id]
+  subnets            = module.vpc.public_subnets
+}
+
+
+resource "aws_lb_target_group" "airflow_web_tg" {
+  name        = "${var.project_name}-tg"
+  port        = 8080
+  protocol    = "HTTP"
+  vpc_id      = module.vpc.vpc_id
+  target_type = "ip"
+
+  health_check {
+    path = "/health" # Airflow 3.0 health check endpoint
+  }
+}
+
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.airflow_alb.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.airflow_web_tg.arn
+  }
+}
+
+# --- ECS Service (The running webserver) ---
+resource "aws_ecs_service" "airflow_webserver" {
+  name            = "airflow-webserver"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.airflow_common.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets         = module.vpc.private_subnets
+    security_groups = [aws_security_group.ecs_service_sg.id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.airflow_web_tg.arn
+    container_name   = "airflow"
+    container_port   = 8080
+  }
+}
+
+
+resource "aws_security_group" "alb_sg" {
+  name        = "${var.project_name}-alb-sg"
+  description = "Allow HTTP inbound traffic to the ALB"
+  vpc_id      = module.vpc.vpc_id
+
+  # Allow inbound HTTP traffic from anywhere
+  ingress {
+    description      = "HTTP from internet"
+    from_port        = 80
+    to_port          = 80
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+
+  # Allow all outbound traffic (to reach ECS tasks)
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+}
+
+
 resource "aws_security_group" "ecs_service_sg" {
   name        = "${var.project_name}-ecs-task-sg"
   vpc_id      = module.vpc.vpc_id
@@ -21,6 +101,21 @@ resource "aws_security_group" "ecs_service_sg" {
     protocol    = "tcp"
     cidr_blocks = [module.vpc.vpc_cidr_block]
   }
+
+  # NEW: Allow tasks to talk to VPC Endpoints (CloudWatch, ECR, etc.)
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [module.vpc.vpc_cidr_block]
+  }
+
+  ingress {
+      from_port       = 8080
+      to_port         = 8080
+      protocol        = "tcp"
+      security_groups = [aws_security_group.alb_sg.id] # Reference the new ALB SG
+    }
 }
 
 # Single Task Definition shared by services (overriding commands)
@@ -38,8 +133,18 @@ resource "aws_ecs_task_definition" "airflow_common" {
       name  = "airflow"
       image = var.airflow_image
       environment = [
-        { name = "AIRFLOW__DATABASE__SQL_ALCHEMY_CONN", value = "postgresql://airflow:airflow123@${aws_db_instance.airflow_db.endpoint}/airflow" },
-        { name = "AIRFLOW__CORE__EXECUTOR", value = "LocalExecutor" } # Simpler for Free Tier
+        { name = "AIRFLOW__DATABASE__SQL_ALCHEMY_CONN", value = var.airflow_database_sql_alchemy_conn },
+        { name = "AIRFLOW__CORE__EXECUTOR", value = "LocalExecutor" }, # Simpler for Free Tier
+        { name = "_AIRFLOW_WWW_USER_USERNAME", value = var.airflow_admin_username },
+        { name = "_AIRFLOW_WWW_USER_PASSWORD", value = var.airflow_admin_password }
+      ]
+# FIX: Added Port Mapping so the Load Balancer can find the container
+      portMappings = [
+        {
+          containerPort = 8080
+          hostPort      = 8080
+          protocol      = "tcp"
+        }
       ]
       logConfiguration = {
         logDriver = "awslogs"
