@@ -21,7 +21,7 @@ resource "aws_lb_target_group" "airflow_web_tg" {
   target_type = "ip"
 
   health_check {
-    path = "/health" # Airflow 3.0 health check endpoint
+    path = "/api/v2/monitor/health" # Airflow 3.0 health check endpoint
   }
 }
 
@@ -43,6 +43,7 @@ resource "aws_ecs_service" "airflow_webserver" {
   task_definition = aws_ecs_task_definition.airflow_common.arn
   desired_count   = 1
   launch_type     = "FARGATE"
+  enable_execute_command = true
 
   network_configuration {
     subnets         = module.vpc.private_subnets
@@ -127,16 +128,24 @@ resource "aws_ecs_task_definition" "airflow_common" {
   memory                   = var.fargate_memory
   execution_role_arn       = aws_iam_role.ecs_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
-
   container_definitions = jsonencode([
     {
       name  = "airflow"
       image = var.airflow_image
+      command = ["api-server"] # Default command, can be overridden in service definition for workers/schedulers
       environment = [
+        # Trigger Database Migration on startup
+        { name = "_AIRFLOW_DB_MIGRATE", value = "true" },
+        { name = "AIRFLOW_HOME", value = "/opt/airflow" },
+
+        # Trigger Admin User Creation
         { name = "AIRFLOW__DATABASE__SQL_ALCHEMY_CONN", value = var.airflow_database_sql_alchemy_conn },
         { name = "AIRFLOW__CORE__EXECUTOR", value = "LocalExecutor" }, # Simpler for Free Tier
         { name = "_AIRFLOW_WWW_USER_USERNAME", value = var.airflow_admin_username },
-        { name = "_AIRFLOW_WWW_USER_PASSWORD", value = var.airflow_admin_password }
+        { name = "_AIRFLOW_WWW_USER_PASSWORD", value = var.airflow_admin_password },
+        { name = "_AIRFLOW_WWW_USER_CREATE", value = "true" },
+        { name = "_AIRFLOW_WWW_USER_ROLE", value = var.airflow_role },
+        { name = "_AIRFLOW_WWW_USER_EMAIL", value = var.airflow_user_email },
       ]
 # FIX: Added Port Mapping so the Load Balancer can find the container
       portMappings = [
@@ -172,5 +181,6 @@ resource "aws_ecs_task_definition" "airflow_common" {
     }
   }
 }
+
 
 

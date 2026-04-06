@@ -13,9 +13,10 @@ variable "airflow_image" {
   type        = string
 }
 
+
 # Free Tier Optimization: Minimum Fargate Specs
-variable "fargate_cpu" { default = "512" }   # 0.5 vCPU
-variable "fargate_memory" { default = "1024" } # 1 GB RAM
+variable "fargate_cpu" { default = "1024" }   # Increased to 1 vCPU for better performance
+variable "fargate_memory" { default = "2048" } # Increased to 2 GB RAM as recommended
 
 
 variable "github_token" {
@@ -50,3 +51,16 @@ variable "airflow_database_sql_alchemy_conn" {
   description = "SQL Alchemy connection string for Airflow"
   type        = string
 }
+
+
+variable "airflow_role" {
+  description = "IAM role for Airflow tasks"
+  type        = string
+
+}
+
+variable "airflow_user_email" {
+  description = "Email address for the Airflow admin user"
+  type        = string
+}
+
