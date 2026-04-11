@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import pandas as pd
 from sqlalchemy import create_engine, text
@@ -7,6 +8,8 @@ from logging import getLogger
 from airflow.sdk import task
 
 logger = getLogger(__name__)
+
+DB_URL = os.getenv("DB_URL")
 
 def is_table_exists(engine: create_engine, table_name: str) -> bool:
     """
@@ -46,8 +49,7 @@ def check_last_date():
 
     ROOT_DIR = Path(__file__).parents[2]
     CSV_PATH = ROOT_DIR / "data/train.csv"  # your uploaded file path
-    DB_URL = "postgresql+psycopg2://airflow:airflow@postgres_dw:5433/airflow"
-    # DB_URL = "postgresql://airflow:airflow@localhost:5433/airflow"
+    logger.info(f"DB_URL: {DB_URL}")
 
     # check if csv file exists
     if not CSV_PATH.exists():
@@ -93,8 +95,7 @@ def upload_csv_to_postgres(
 
     ROOT_DIR = Path(__file__).parents[2]
     CSV_PATH = ROOT_DIR / "data/train.csv"  # your uploaded file path
-    DB_URL = "postgresql+psycopg2://airflow:airflow@postgres_dw:5433/airflow"
-    # DB_URL = "postgresql://airflow:airflow@localhost:5433/airflow"
+    logger.info(f"DB_URL: {DB_URL}")
 
     TABLE_NAME = "train"
     engine = create_engine(DB_URL,future=True)

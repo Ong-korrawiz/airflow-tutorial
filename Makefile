@@ -17,3 +17,10 @@ migrate:
 				} \
 			] \
 		}'
+
+
+push_to_ecr:
+	aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 880197157210.dkr.ecr.us-east-1.amazonaws.com
+	docker build -t airflow-tutorial .
+	docker tag airflow-tutorial:latest 880197157210.dkr.ecr.us-east-1.amazonaws.com/airflow-tutorial:latest
+	docker push 880197157210.dkr.ecr.us-east-1.amazonaws.com/airflow-tutorial:latest
