@@ -64,3 +64,22 @@ variable "airflow_user_email" {
   type        = string
 }
 
+
+variable "private_db_username" {
+  description = "Username for the private RDS instance"
+  type        = string
+  
+}
+
+variable "private_db_password" {
+  description = "Password for the private RDS instance"
+  type        = string
+  sensitive   = true
+}
+
+
+variable "private_db_dbname" {
+  description = "Database name for the private RDS instance"
+  type        = string
+  
+}

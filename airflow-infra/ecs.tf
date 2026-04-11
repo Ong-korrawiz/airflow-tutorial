@@ -134,6 +134,10 @@ resource "aws_ecs_task_definition" "airflow_common" {
       image = var.airflow_image
       command = ["api-server"] # Default command, can be overridden in service definition for workers/schedulers
       environment = [
+        # Tell Airflow to dynamically trust the ALB's routing headers
+        { name = "AIRFLOW__FAB__ENABLE_PROXY_FIX", value = "true" },
+        { name = "AIRFLOW__CORE__AUTH_MANAGER", value = "airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager" },
+        { name = "AIRFLOW__API_AUTH__JWT_SECRET", value = "replace-this-with-a-random-secure-string" },
         # Trigger Database Migration on startup
         { name = "_AIRFLOW_DB_MIGRATE", value = "true" },
         { name = "AIRFLOW_HOME", value = "/opt/airflow" },
@@ -146,6 +150,7 @@ resource "aws_ecs_task_definition" "airflow_common" {
         { name = "_AIRFLOW_WWW_USER_CREATE", value = "true" },
         { name = "_AIRFLOW_WWW_USER_ROLE", value = var.airflow_role },
         { name = "_AIRFLOW_WWW_USER_EMAIL", value = var.airflow_user_email },
+        { name = "_PIP_ADDITIONAL_REQUIREMENTS", value = "apache-airflow-providers-fab==2.0.2" }
       ]
 # FIX: Added Port Mapping so the Load Balancer can find the container
       portMappings = [
