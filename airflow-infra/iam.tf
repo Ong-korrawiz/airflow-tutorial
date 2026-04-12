@@ -59,3 +59,29 @@ resource "aws_iam_role_policy_attachment" "execution_efs_access" {
   role       = aws_iam_role.ecs_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonElasticFileSystemClientFullAccess"
 }
+
+
+# --- IAM Policy for S3 Remote Logging ---
+resource "aws_iam_role_policy" "airflow_s3_logs_policy" {
+  name = "${var.project_name}-s3-logs-policy"
+  role = aws_iam_role.ecs_task_role.id # This attaches to the task role used in your ecs.tf
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:GetBucketLocation",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          aws_s3_bucket.airflow_logs.arn,
+          "${aws_s3_bucket.airflow_logs.arn}/*"
+        ]
+      }
+    ]
+  })
+}

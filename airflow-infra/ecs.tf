@@ -117,6 +117,14 @@ resource "aws_security_group" "ecs_service_sg" {
       protocol        = "tcp"
       security_groups = [aws_security_group.alb_sg.id] # Reference the new ALB SG
     }
+
+  ingress {
+      description = "Airflow Worker Live Logs"
+      from_port   = 8793
+      to_port     = 8793
+      protocol    = "tcp"
+      cidr_blocks = [module.vpc.vpc_cidr_block]
+    }
 }
 
 # Single Task Definition shared by services (overriding commands)
@@ -150,9 +158,14 @@ resource "aws_ecs_task_definition" "airflow_common" {
         { name = "_AIRFLOW_WWW_USER_CREATE", value = "true" },
         { name = "_AIRFLOW_WWW_USER_ROLE", value = var.airflow_role },
         { name = "_AIRFLOW_WWW_USER_EMAIL", value = var.airflow_user_email },
-        { name = "_PIP_ADDITIONAL_REQUIREMENTS", value = "apache-airflow-providers-fab==2.0.2" }
+        { name = "_PIP_ADDITIONAL_REQUIREMENTS", value = "apache-airflow-providers-fab==2.0.2" },
+        
+        # Enable S3 Remote Logging
+        { name = "AIRFLOW__LOGGING__REMOTE_LOGGING", value = "true" },
+        { name = "AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER", value = "s3://${aws_s3_bucket.airflow_logs.bucket}/airflow-logs" },
+        { name = "AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID", value = "aws_default" },
       ]
-# FIX: Added Port Mapping so the Load Balancer can find the container
+      # FIX: Added Port Mapping so the Load Balancer can find the container
       portMappings = [
         {
           containerPort = 8080
