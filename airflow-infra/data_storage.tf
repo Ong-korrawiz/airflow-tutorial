@@ -9,8 +9,8 @@ resource "aws_security_group" "rds_sg" {
 
   ingress {
     description     = "PostgreSQL access from ECS tasks"
-    from_port       = 5433
-    to_port         = 5433
+    from_port       = 5432
+    to_port         = 5432
     protocol        = "tcp"
     # Network Check: This links directly to the ECS security group from your ecs.tf!
     security_groups = [aws_security_group.ecs_service_sg.id]

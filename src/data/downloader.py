@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 import pandas as pd
 from sqlalchemy import create_engine, text
 
@@ -22,14 +23,14 @@ def download_table_from_postgres(
 
     Parameters:
     - table_name: name of the table to read (default "train")
-    - db_url: SQLAlchemy database URL. If None, uses the same default as the upload script.
+    - db_url: SQLAlchemy database URL. If None, uses the DB_URL environment variable or local default.
 
     Returns:
     - pandas.DataFrame with the table contents (parsing 'date' column as datetime if present)
     """
-    # Default DB URL matches the upload script
+    # Default DB URL: use environment variable (AWS ECS) or fall back to local default
     if db_url is None:
-        db_url = "postgresql+psycopg2://airflow:airflow@postgres_dw:5433/airflow"
+        db_url = os.getenv("DB_URL", "postgresql+psycopg2://airflow:airflow@postgres_dw:5433/airflow")
 
     engine = create_engine(db_url, future=True)
 

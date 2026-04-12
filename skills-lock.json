@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "terraform-aws": {
+      "source": "bagelhole/devops-security-agent-skills",
+      "sourceType": "github",
+      "computedHash": "88c0f181a92f4aef316b103a380989ed504026e2162958d90ea0925e4d6d81d2"
+    }
+  }
+}

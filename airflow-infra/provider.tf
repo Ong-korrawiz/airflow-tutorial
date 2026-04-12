@@ -12,6 +12,12 @@ provider "aws" {
   region = var.aws_region
 }
 
+# Alias for resources that already exist in us-west-2
+provider "aws" {
+  alias  = "us_west_2"
+  region = "us-west-2"
+}
+
 
 provider "github" {
   token = var.github_token # You'll need a GitHub Personal Access Token

@@ -83,3 +83,29 @@ variable "private_db_dbname" {
   type        = string
   
 }
+
+# --- Airflow 3.0 Multi-Service Variables ---
+
+variable "fernet_key" {
+  description = "Airflow Fernet key for encrypting connection passwords in the metadata DB"
+  type        = string
+  sensitive   = true
+}
+
+variable "jwt_secret" {
+  description = "Secret key for Airflow API JWT authentication"
+  type        = string
+  sensitive   = true
+}
+
+# Scheduler uses the same sizing as the api-server (fargate_cpu / fargate_memory)
+# Dag-processor and triggerer are lightweight and can use smaller specs
+variable "lightweight_cpu" {
+  description = "Fargate CPU units for lightweight services (dag-processor, triggerer)"
+  default     = "256"
+}
+
+variable "lightweight_memory" {
+  description = "Fargate memory (MB) for lightweight services (dag-processor, triggerer)"
+  default     = "512"
+}

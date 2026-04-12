@@ -22,3 +22,7 @@ logs/**
 
 # secret files
 secrets/
+
+
+# agent skill
+.agent/

@@ -18,9 +18,30 @@ migrate:
 			] \
 		}'
 
-
 push_to_ecr:
 	aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 880197157210.dkr.ecr.us-east-1.amazonaws.com
 	docker build -t airflow-tutorial .
 	docker tag airflow-tutorial:latest 880197157210.dkr.ecr.us-east-1.amazonaws.com/airflow-tutorial:latest
 	docker push 880197157210.dkr.ecr.us-east-1.amazonaws.com/airflow-tutorial:latest
+
+# --- Cluster Management ---
+
+start-local:
+	./start.sh local
+
+start-aws:
+	./start.sh aws
+
+stop-local:
+	./stop.sh local
+
+stop-aws:
+	./stop.sh aws
+
+redeploy-aws:
+	@echo "Forcing new deployment on all Airflow ECS services..."
+	aws ecs update-service --cluster airflow-3-dev-cluster --service airflow-apiserver --force-new-deployment --region us-east-1
+	aws ecs update-service --cluster airflow-3-dev-cluster --service airflow-scheduler --force-new-deployment --region us-east-1
+	aws ecs update-service --cluster airflow-3-dev-cluster --service airflow-dag-processor --force-new-deployment --region us-east-1
+	aws ecs update-service --cluster airflow-3-dev-cluster --service airflow-triggerer --force-new-deployment --region us-east-1
+	@echo "Deployment triggered! New tasks will spin up with the latest image."

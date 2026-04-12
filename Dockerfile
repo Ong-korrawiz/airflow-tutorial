@@ -44,5 +44,7 @@ RUN python -m pip install prophet
 
 COPY data/ /opt/airflow/data/
 COPY src/ /opt/airflow/src/
+COPY dags/ /opt/airflow/dags/
+
 
     

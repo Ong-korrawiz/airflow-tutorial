@@ -128,7 +128,7 @@ def upload_csv_to_postgres(
 def upload_forecasting_to_postgres(
     df: pd.DataFrame,
     table_name: str = "forecasting",
-    db_url: str = "postgresql+psycopg2://airflow:airflow@postgres_dw:5433/airflow",
+    db_url: str | None = None,
 ) -> None:
     """
     Upload forecasting DataFrame to Postgres.
@@ -136,8 +136,12 @@ def upload_forecasting_to_postgres(
     Parameters:
     - df: pandas DataFrame containing forecasting data
     - table_name: name of the target table in Postgres (default "forecasting")
-    - db_url: SQLAlchemy database URL (default connects to local Postgres)
+    - db_url: SQLAlchemy database URL. If None, uses the DB_URL environment variable or local default.
     """
+    # Use environment variable (AWS ECS) or fall back to local default
+    if db_url is None:
+        db_url = os.getenv("DB_URL", "postgresql+psycopg2://airflow:airflow@postgres_dw:5433/airflow")
+    
     engine = create_engine(db_url, future=True)
 
     # Create table if it doesn't exist
