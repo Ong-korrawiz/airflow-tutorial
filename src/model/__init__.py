@@ -19,8 +19,6 @@ logger = getLogger(__name__)
 
 def save_model(m: Prophet, filepath: str) -> None:
     import os
-    print("AIRFLOW_UID", os.environ["AIRFLOW_UID"])
-    print("AIRFLOW_GID", os.environ["AIRFLOW_GID"])
     # check if directory exists
     if not Path(filepath).parent.exists():
         logger.info(f"Creating directory for model at {Path(filepath).parent}...")
