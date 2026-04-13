@@ -26,3 +26,5 @@ secrets/
 
 # agent skill
 .agent/
+.agents/
+./skills-lock.json
