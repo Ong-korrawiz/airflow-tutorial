@@ -45,6 +45,12 @@ locals {
     # --- Scheduler ---
     { name = "AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK", value = "true" },
 
+    # --- S3 Configuration (for model upload) ---
+    { name = "S3_ACCESS_KEY_ID", value = var.s3_access_key_id },
+    { name = "S3_SECRET_ACCESS_KEY", value = var.s3_secret_access_key },
+    { name = "S3_BUCKET_NAME", value = var.s3_bucket_name },
+    { name = "S3_BUCKET_REGION", value = var.s3_bucket_region },
+
     # --- Provider packages ---
     { name = "_PIP_ADDITIONAL_REQUIREMENTS", value = "apache-airflow-providers-fab==2.0.2" },
   ]

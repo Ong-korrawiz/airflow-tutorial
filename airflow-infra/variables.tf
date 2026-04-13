@@ -98,6 +98,28 @@ variable "jwt_secret" {
   sensitive   = true
 }
 
+variable "s3_access_key_id" {
+  description = "AWS Access Key ID for S3 model upload"
+  type        = string
+  sensitive   = true
+}
+
+variable "s3_secret_access_key" {
+  description = "AWS Secret Access Key for S3 model upload"
+  type        = string
+  sensitive   = true
+}
+
+variable "s3_bucket_name" {
+  description = "S3 bucket name for storing Prophet models"
+  type        = string
+}
+
+variable "s3_bucket_region" {
+  description = "AWS region for the S3 bucket"
+  type        = string
+}
+
 # Scheduler uses the same sizing as the api-server (fargate_cpu / fargate_memory)
 # Dag-processor and triggerer are lightweight and can use smaller specs
 variable "lightweight_cpu" {
