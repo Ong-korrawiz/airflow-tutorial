@@ -5,6 +5,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    github = {
+      source  = "integrations/github"
+      version = "~> 6.0"
+    }
   }
 }
 
@@ -18,8 +22,8 @@ provider "aws" {
   region = "us-west-2"
 }
 
-
+# GitHub provider reads GITHUB_TOKEN from environment variable
 provider "github" {
-  token = var.github_token # You'll need a GitHub Personal Access Token
   owner = var.github_username
+  # token is read automatically from GITHUB_TOKEN environment variable
 }
