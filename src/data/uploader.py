@@ -98,7 +98,7 @@ def upload_csv_to_postgres(
     logger.info(f"DB_URL: {DB_URL}")
 
     TABLE_NAME = "train"
-    engine = create_engine(DB_URL,future=True)
+    engine = create_engine(DB_URL, future=True)
     
     # ---- STEP 1: Create table if it doesn't exist ----
     create_table_sql = f"""
@@ -109,16 +109,17 @@ def upload_csv_to_postgres(
         sales INTEGER
     );
     """
-    with engine.connect() as conn:
+    with engine.begin() as conn:
         conn.execute(text(create_table_sql))
-        conn.commit()
     
     # ---- STEP 2: Load CSV into dataframe ----
     df = pd.read_csv(CSV_PATH, parse_dates=["date"])
     logger.info(f"Loaded CSV with {len(df)} rows and columns: {df.columns.tolist()}")
     
-    # ---- STEP 3: Upload to Postgres ----
-    df.to_sql(TABLE_NAME, engine, if_exists="append", index=False)
+    # ---- STEP 3: Upload to Postgres with explicit commit ----
+    # Use engine.begin() to auto-commit on success
+    with engine.begin() as conn:
+        df.to_sql(TABLE_NAME, conn, if_exists="append", index=False)
     
     logger.info("CSV uploaded successfully!")
 
@@ -153,13 +154,11 @@ def upload_forecasting_to_postgres(
         yhat_upper FLOAT
     );
     """
-    with engine.connect() as conn:
-
-
+    with engine.begin() as conn:
         conn.execute(text(create_table_sql))
-        conn.commit()
 
-    # Upload DataFrame to Postgres
-    df.to_sql(table_name, engine, if_exists="replace", index=False)
+    # Upload DataFrame to Postgres with explicit commit
+    with engine.begin() as conn:
+        df.to_sql(table_name, conn, if_exists="replace", index=False)
 
     logger.info(f"Forecasting data uploaded successfully to table '{table_name}'!")
