@@ -16,7 +16,7 @@ variable "airflow_image" {
 
 # Free Tier Optimization: Minimum Fargate Specs
 variable "fargate_cpu" { default = "2048" }   # 2 vCPU for API server and scheduler
-variable "fargate_memory" { default = "4096" } # 4 GB RAM for better API server performance
+variable "fargate_memory" { default = "8192" } # 8 GB RAM for training tasks memory-intensive operations
 
 
 variable "github_token" {

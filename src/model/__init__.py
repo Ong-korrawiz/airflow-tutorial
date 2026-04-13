@@ -77,26 +77,56 @@ def validate_demand_dataframe(df: pd.DataFrame) -> bool:
 
 @task(
         task_id="train_prophet_model",
-        execution_timeout=timedelta(seconds=600),
+        execution_timeout=timedelta(seconds=900),  # Increased to 15 minutes for large dataset
         )
 def train_prophet_model(train_df: pd.DataFrame, save: bool = True) -> Prophet:
     """Train a Prophet model on the provided training DataFrame.
     
     Args:
-        train_df (pd.DataFrame): DataFrame containing training data with 'date' and '
-            sales' columns.
+        train_df (pd.DataFrame): DataFrame containing training data with 'date' and 'sales' columns.
         save (bool): Whether to save the trained model to disk. Defaults to True.
+    
+    Note:
+        For large datasets with multiple stores/items, we aggregate to daily total sales
+        to reduce memory usage while maintaining trend/seasonality information.
     """
+    import gc
+    
     logger.info("Training Prophet model...")
-    logger.debug(f"Training DataFrame head:\n{train_df.head()}")
-    model = Prophet()
-    prophet_df = train_df.rename(columns={'date': 'ds', 'sales': 'y'})
+    logger.info(f"Training DataFrame shape: {train_df.shape}")
+    
+    # ---- OPTIMIZATION: Aggregate multi-store/item data to daily totals ----
+    # This reduces memory usage from 913k rows to ~1000 rows (daily aggregates)
+    # while preserving trend and seasonality patterns
+    if 'store' in train_df.columns and 'item' in train_df.columns:
+        logger.info("Aggregating by date (multiple stores/items detected)")
+        prophet_df = train_df.groupby('date').agg({'sales': 'sum'}).reset_index()
+        prophet_df.columns = ['ds', 'y']
+        logger.info(f"Aggregated to {len(prophet_df)} daily records from {len(train_df)} original rows")
+    else:
+        prophet_df = train_df.rename(columns={'date': 'ds', 'sales': 'y'})
+    
+    # ---- FIT MODEL with optimized settings ----
+    # Use subdaily_seasonality=False to reduce memory usage
+    model = Prophet(
+        daily_seasonality=False,  # Reduce memory: we aggregated to daily level
+        interval_width=0.95,       # Default confidence interval
+        yearly_seasonality=True,   # Keep yearly seasonality if enough data
+    )
+    
+    logger.info("Fitting Prophet model (this may take a few minutes)...")
     model.fit(prophet_df)
     logger.info("Model training complete.")
+    
+    # ---- CLEANUP: Free memory after fitting ----
+    del prophet_df
+    gc.collect()
+    
     if save:
         logger.info("Saving trained model to disk...")
         model_configs = configs.get_model_configs()
         save_model(model, model_configs.model_path)
+    
     return True
     
 
